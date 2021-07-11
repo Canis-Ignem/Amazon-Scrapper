@@ -81,7 +81,9 @@ def send_email(item, body):
     
     email = "jonperezetxebarria@gmail.com"
     sender_email = "jonperezetxebarria@gmail.com"
-    pas= "mpmppwoxfvwnzbyg"
+    pas = ""
+    with open('pass','r')as f:
+        pas= f.readline()
     message = "Subject: {}\n\n{}".format(subject,body)
     try:
         s = smtplib.SMTP('smtp.gmail.com', 587)
