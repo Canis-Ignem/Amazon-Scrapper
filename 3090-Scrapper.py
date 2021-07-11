@@ -1,9 +1,10 @@
 from selenium import webdriver
 from time import sleep
 import argparse
+import smtplib
 
 
-parser = argparse.ArgumentParser(description="NBGRADER partner script")
+parser = argparse.ArgumentParser(description="Amazon scrapper")
 parser.add_argument('--item', metavar = 'i', type = str, required = True)
 parser.add_argument('--price', metavar = 'p', type = int, required = True)
 args = vars(parser.parse_args())
@@ -45,29 +46,53 @@ def amazon_scrapper(item,price):
     '''
     
     titles = driver.find_elements_by_xpath('//span[@class="a-size-base-plus a-color-base a-text-normal"][contains(text(),"3090")]')
-    original_xpath = '/html/body/div[1]/div[2]/div[1]/div/div[1]/div/span[3]/div[2]/div[{}]/div/span/div/div/div[2]/div[1]/h2/a/span'
+    original_xpath = '/html/body/div[1]/div[2]/div[1]/div/div[1]/div/span[3]/div[2]/div[{}]/div/span/div/div/div[2]/div[1]/h2/a'
+                      
     sleep(0.5)
+    
+    body = ""
     
     for i  in range(1,len(titles)):
         
         try:
             #item_price = driver.find_element_by_xpath('//span[@class="a-size-base-plus a-color-base a-text-normal"][contains(text(),"3090")]/following::span[contains(@class,"price-whole")]')
-            title = driver.find_element_by_xpath(original_xpath.format(i))
-            if "3090" in title.text:
+            #title = driver.find_element_by_xpath(original_xpath.format(i))
+            product = driver.find_element_by_xpath(original_xpath.format(i))
+            if item in product.text:
                 item_price = driver.find_element_by_xpath(original_xpath.format(i)+'/following::span[contains(@class,"price-whole")]')
+                print(item_price.text)
                 if price > int(item_price.text.replace(".","").split(",")[0]):
-                    print(title.text)
-                    print("The price",item_price.text)
-                    print("------------------------------------------------")
-                    
+                    body += "Product name: {} \n Price: {} \n Link: {} \n ------------------------------------------------\n".format(str(product.text.encode())[2:-1], item_price.text.replace(".","").split(",")[0], product.get_attribute("href") ) 
+                    print(body)
         except:
             break
+    
+    if body != "":
+        print()
+        send_email(item,body)
         
         #product = driver.find_element_by_xpath('//div[@class="a-section a-spacing-medium"][contains(text(),"3090")] ')
         #print(product.text)
         
     driver.close()
-        
+    
+def send_email(item, body):
+    subject = item
+    
+    email = "jonperezetxebarria@gmail.com"
+    sender_email = "jonperezetxebarria@gmail.com"
+    pas= "mpmppwoxfvwnzbyg"
+    message = "Subject: {}\n\n{}".format(subject,body)
+    try:
+        s = smtplib.SMTP('smtp.gmail.com', 587)
+        s.ehlo()
+        s.starttls()
+        s.login(sender_email, pas)
+        s.sendmail(sender_email, email, message)         
+        print( "Successfully sent email to: ", email)
+        s.quit()
+    except Exception as vx:      
+        print(vx)        
     
 def main():
     while True:
